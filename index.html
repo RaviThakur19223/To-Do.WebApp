@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="to-do.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2575fc">
+  <title>To-Do App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* White 3D Background */
+      background: linear-gradient(145deg, #f5f5f5, #ffffff);
+      background-attachment: fixed;
+      box-shadow: inset 10px 10px 20px rgba(0, 0, 0, 0.05),
+                  inset -10px -10px 20px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Glass Effect for Main App */
+    .app {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      width: 100%; max-width: 420px; min-height: 90vh;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ===== Splash Screen ===== */
+    .splash-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #ffffff;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999;
+      transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    .splash-screen img {
+      width: 100px; height: 100px;
+      animation: bounce 1.5s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    .splash-screen.hidden { opacity: 0; visibility: hidden; }
+
+    /* ===== App Styles ===== */
+    header {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff; padding: 15px; text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 22px; font-weight: 600; }
+
+    .task-input {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 15px; border-bottom: 1px solid #eee;
+    }
+    .task-input input {
+      padding: 12px; border: 1px solid #ccc;
+      border-radius: 12px; font-size: 14px;
+      outline: none; transition: 0.3s;
+    }
+    .task-input input:focus {
+      border-color: #2575fc;
+      box-shadow: 0 0 6px rgba(37,117,252,0.3);
+    }
+    .task-input button {
+      padding: 12px;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff; border: none; border-radius: 12px;
+      cursor: pointer; transition: 0.3s; font-weight: 500;
+    }
+    .task-input button:hover {
+      background: linear-gradient(135deg, #2575fc, #6a11cb);
+      transform: translateY(-2px);
+    }
+
+    .tabs {
+      display: flex; justify-content: space-around;
+      background: #fafafa; border-bottom: 1px solid #ddd;
+    }
+    .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-size: 14px; }
+    .tab.active {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff; font-weight: 600;
+    }
+
+    ul {
+      list-style: none;
+      padding: 15px;
+      margin: 0;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 320px;
+      border-radius: 12px;
+    }
+
+    /* Scrollbar Styling */
+    ul::-webkit-scrollbar { width: 8px; }
+    ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+    ul::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      border-radius: 10px;
+    }
+    ul::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #2575fc, #6a11cb);
+    }
+
+    li {
+      background: #fff;
+      padding: 12px 15px; margin-bottom: 12px;
+      border-radius: 12px; display: flex;
+      justify-content: space-between; align-items: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    li:hover { transform: scale(1.02); }
+
+    .task-details { flex: 1; }
+    .task-text { font-weight: 500; }
+    .task-time { font-size: 12px; color: #555; margin-top: 4px; }
+    .status { font-size: 12px; margin-top: 4px; color: green; font-weight: 500; }
+
+    .actions { display: flex; gap: 6px; margin-left: 10px; }
+    .actions button {
+      border: none; padding: 6px 10px;
+      border-radius: 8px; cursor: pointer;
+      font-size: 12px; transition: 0.2s;
+    }
+    .edit-btn { background: linear-gradient(135deg, #f7971e, #ffd200); color: #fff; }
+    .complete-btn { background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; }
+    .delete-btn { background: linear-gradient(135deg, #e53935, #e35d5b); color: #fff; }
+    .actions button:hover { transform: scale(1.05); }
+
+    footer {
+      background: #fafafa;
+      padding: 12px; text-align: center;
+      font-size: 13px; color: #666;
+    }
+    .clear-btn {
+      background: linear-gradient(135deg, #e53935, #e35d5b); color: #fff;
+      border: none; padding: 8px 15px;
+      border-radius: 8px; cursor: pointer;
+      margin-top: 8px; font-weight: 500;
+    }
+    .clear-btn:hover { transform: scale(1.05); }
+
+    .empty-message {
+      text-align: center; color: #777; font-size: 14px; margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Splash Screen -->
+  <div class="splash-screen">
+    <img src="to-do.png" alt="App Logo">
+  </div>
+
+  <!-- App -->
+  <div class="app">
+    <header><h1>My To-Do</h1></header>
+
+    <div class="task-input">
+      <input type="text" id="taskInput" placeholder="Add a new task...">
+      <button id="addBtn">Add Task</button>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-filter="all">All</div>
+      <div class="tab" data-filter="active">Active</div>
+      <div class="tab" data-filter="completed">Completed</div>
+    </div>
+
+    <ul id="taskList"></ul>
+    <p class="empty-message" id="emptyMessage">No tasks yet. Add one above!</p>
+
+    <footer>
+      ✔ Stay productive | To-Do App By RT <br>
+      <button class="clear-btn" id="clearAll">Clear All</button>
+    </footer>
+  </div>
+
+  <script>
+    // ===== Splash Screen Logic =====
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        document.querySelector(".splash-screen").classList.add("hidden");
+      }, 2000);
+    });
+
+    const taskInput = document.getElementById("taskInput");
+    const addBtn = document.getElementById("addBtn");
+    const taskList = document.getElementById("taskList");
+    const tabs = document.querySelectorAll(".tab");
+    const clearAllBtn = document.getElementById("clearAll");
+    const emptyMessage = document.getElementById("emptyMessage");
+
+    // Load saved tasks
+    window.onload = () => {
+      const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      savedTasks.forEach(task => renderTask(task.text, task.date, task.completed));
+      toggleEmptyMessage();
+    };
+
+    function saveTasks() {
+      const tasks = [];
+      document.querySelectorAll("#taskList li").forEach(li => {
+        tasks.push({
+          text: li.querySelector(".task-text").textContent,
+          date: li.querySelector(".task-time")?.textContent || "",
+          completed: li.querySelector(".status")?.textContent === "✔ Completed"
+        });
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      toggleEmptyMessage();
+    }
+
+    function toggleEmptyMessage() {
+      const visibleTasks = [...taskList.querySelectorAll("li")].filter(li => li.style.display !== "none");
+      emptyMessage.style.display = visibleTasks.length === 0 ? "block" : "none";
+    }
+
+    function renderTask(taskText, taskDate = "", completed = false) {
+      const li = document.createElement("li");
+
+      const details = document.createElement("div");
+      details.className = "task-details";
+
+      const span = document.createElement("span");
+      span.className = "task-text";
+      span.textContent = taskText;
+
+      const time = document.createElement("div");
+      time.className = "task-time";
+      time.textContent = taskDate || new Date().toLocaleString();
+
+      const status = document.createElement("div");
+      status.className = "status";
+      if (completed) status.textContent = "✔ Completed";
+
+      details.appendChild(span);
+      details.appendChild(time);
+      details.appendChild(status);
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      // If task is NOT completed → show Edit + Done + Delete
+      if (!completed) {
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.className = "edit-btn";
+        editBtn.addEventListener("click", () => {
+          const newTask = prompt("Edit task:", span.textContent);
+          if (newTask) {
+            span.textContent = newTask;
+            saveTasks();
+          }
+        });
+
+        const completeBtn = document.createElement("button");
+        completeBtn.textContent = "Done";
+        completeBtn.className = "complete-btn";
+        completeBtn.addEventListener("click", () => {
+          status.textContent = "✔ Completed";
+          // remove Edit + Done buttons, keep only Delete
+          actions.innerHTML = "";
+          actions.appendChild(delBtn);
+          saveTasks();
+        });
+
+        actions.appendChild(editBtn);
+        actions.appendChild(completeBtn);
+      }
+
+      // Delete button (always)
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.className = "delete-btn";
+      delBtn.addEventListener("click", () => {
+        li.remove();
+        saveTasks();
+      });
+      actions.appendChild(delBtn);
+
+      li.appendChild(details);
+      li.appendChild(actions);
+      taskList.appendChild(li);
+
+      saveTasks();
+    }
+
+    function addTask() {
+      const taskText = taskInput.value.trim();
+      if (taskText === "") return;
+      renderTask(taskText);
+      taskInput.value = "";
+    }
+
+    addBtn.addEventListener("click", addTask);
+    taskInput.addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
+
+    // Tabs filter
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const filter = tab.dataset.filter;
+        document.querySelectorAll("#taskList li").forEach(li => {
+          const isCompleted = li.querySelector(".status").textContent === "✔ Completed";
+          if (filter === "all") li.style.display = "flex";
+          else if (filter === "active") li.style.display = isCompleted ? "none" : "flex";
+          else if (filter === "completed") li.style.display = isCompleted ? "flex" : "none";
+        });
+        toggleEmptyMessage();
+      });
+    });
+
+    // Clear all
+    clearAllBtn.addEventListener("click", () => {
+      if (confirm("Clear all tasks?")) {
+        taskList.innerHTML = "";
+        saveTasks();
+      }
+    });
+
+      if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+      .then(() => console.log("Service Worker Registered"));
+    }
+  </script>
+  
+</body>
+</html>
