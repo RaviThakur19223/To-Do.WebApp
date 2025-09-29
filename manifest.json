@@ -1,11 +1,10 @@
 {
-  "name": "My To-Do App",
-  "short_name": "To-Do",
+  "name": "SmartTasks",
+  "short_name": "SmartTasks",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2575fc",
-  "orientation": "portrait",
+  "theme_color": "#6a11cb",
   "icons": [
     {
       "src": "to-do.png",
